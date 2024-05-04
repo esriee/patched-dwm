@@ -9,22 +9,25 @@ static const int topbar             = 0;        /* 0 means bottom bar */
 static const int user_bh            = 20;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const char *fonts[]          = { "Comic Shanns:size=10" };
 static const char dmenufont[]       = "Comic Shanns:size=q";
-static const char col_gray1[]       = "#11111b";
-static const char col_gray2[]       = "#88C0D0";
-static const char col_gray3[]       = "#95995a";
-static const char col_gray4[]       = "#000000";
-static const char col_cyan[]        = "#b7bd4b";
+static const char col_gray1[]       = "#1e1e2e";
+static const char col_gray2[]       = "#3b4252";
+static const char col_gray3[]       = "#cdd6f4";
+static const char col_gray4[]       = "#D8DEE9";
+static const char col_cyan[]        = "#626880";
+
 static const unsigned int baralpha = 0xd0;
 static const unsigned int borderalpha = OPAQUE;
+
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
 	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
 };
+
 static const unsigned int alphas[][3]      = {
     /*               fg      bg        border*/
     [SchemeNorm] = { OPAQUE, baralpha, borderalpha },
-	[SchemeSel]  = { OPAQUE, baralpha, borderalpha },
+    [SchemeSel]  = { OPAQUE, baralpha, borderalpha },
 };
 
 /* tagging */
@@ -37,16 +40,16 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      instance    title       tags mask     isfloating   monitor */
-	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
-	{ "Brave-browser",  NULL,       NULL,       1 << 1,       0,           -1 },
-	{ "discord",    NULL,     NULL,       0,              1,         -1 }, 
-	{ "code-oss", NULL,       NULL,       1 << 2,       0,            -1 }, 
-        { "VirtualBox Manager",  NULL,  NULL, 1 << 3,       0,            -1 }, 
-	{ "Thunar",   NULL,     NULL,         1 << 2,          0,           -1 }, 	
-        { "Spotify",  NULL,    NULL,          1 << 5,         1,          -1 },  
-	{ "Tilda",    NULL,   NULL,                 0,         1,       -1 },
-        { "KeePassXC", NULL,   NULL,         0,                1,       -1 }, 
+	/* class      instance    title       tags mask     isfloating  CenterThisWindow?   monitor */
+	{ "Gimp",     NULL,       NULL,       0,            1,                  0,              -1 },
+	{ "Brave-browser",  NULL,       NULL,       1 << 1,       0,            0,              -1 },
+	{ "discord",    NULL,     NULL,       0,              1,                1,             -1 }, 
+	{ "code-oss", NULL,       NULL,       1 << 2,       0,                  0,             -1 }, 
+  { "VirtualBox Manager",  NULL,  NULL, 1 << 3,       0,                  1,        -1 }, 
+	{ "Thunar",   NULL,     NULL,         1 << 2,          0,               1,             -1 }, 	
+  { "Spotify",  NULL,    NULL,          1 << 5,         1,                1,        -1 },  
+	{ "Tilda",    NULL,   NULL,                 0,         1,               0,              -1 },
+  { "KeePassXC", NULL,   NULL,         0,                1,               1,        -1 }, 
 };
 
 /* layout(s) */
@@ -75,8 +78,8 @@ static const Layout layouts[] = {
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 //static const char *rofimenucmd[] = { "rofi", "-show", "run", "icons","-theme","onedark", NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "alacritty", NULL };
 static const char *lfcmd[] = {"lf", NULL};
 static const char *up_vol[]   = { "pactl", "set-sink-volume", "@DEFAULT_SINK@", "+10%",   NULL };
