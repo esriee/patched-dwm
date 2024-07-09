@@ -93,7 +93,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
 	int bw, oldbw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, needresize;
 	Client *next;
 	Client *snext;
 	Monitor *mon;
@@ -148,6 +148,7 @@ static void applyrules(Client *c);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
+static void aspectresize(const Arg *arg);
 static void attach(Client *c);
 static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
@@ -198,6 +199,12 @@ static void restack(Monitor *m);
 static void run(void);
 static void runautostart(void);
 static void scan(void);
+static void scratchpad_hide ();
+static _Bool scratchpad_last_showed_is_killed (void);
+static void scratchpad_remove ();
+static void scratchpad_show ();
+static void scratchpad_show_client (Client * c);
+static void scratchpad_show_first (void);
 static int sendevent(Client *c, Atom proto);
 static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
@@ -279,11 +286,15 @@ static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
 
+/* scratchpad */
+# define SCRATCHPAD_MASK (1u << sizeof tags / sizeof * tags)
+static Client * scratchpad_last_showed = NULL;
+
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
-struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
+struct NumTags { char limitexceeded[LENGTH(tags) > 30 ? -1 : 1]; };
 
 /* function implementations */
 void
@@ -319,7 +330,8 @@ applyrules(Client *c)
 		XFree(ch.res_class);
 	if (ch.res_name)
 		XFree(ch.res_name);
-	c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset[c->mon->seltags];
+	if (c->tags != SCRATCHPAD_MASK)
+		c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset[c->mon->seltags];
 }
 
 int
@@ -410,6 +422,30 @@ arrangemon(Monitor *m)
 	strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
 	if (m->lt[m->sellt]->arrange)
 		m->lt[m->sellt]->arrange(m);
+}
+
+void
+aspectresize(const Arg *arg) {
+	/* only floating windows can be moved */
+	Client *c;
+	c = selmon->sel;
+	float ratio;
+	int w, h,nw, nh;
+
+	if (!c || !arg)
+		return;
+	if (selmon->lt[selmon->sellt]->arrange && !c->isfloating)
+		return;
+
+	ratio = (float)c->w / (float)c->h;
+	h = arg->i;
+	w = (int)(ratio * h);
+
+	nw = c->w + w;
+	nh = c->h + h;
+
+	XRaiseWindow(dpy, c->win);
+	resize(c, c->x, c->y, nw, nh, True);
 }
 
 void
@@ -626,6 +662,8 @@ configurerequest(XEvent *e)
 				configure(c);
 			if (ISVISIBLE(c))
 				XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);
+			else
+				c->needresize = 1;
 		} else
 			configure(c);
 	} else {
@@ -749,7 +787,10 @@ drawbar(Monitor *m)
 	if ((w = m->ww - tw - x) > bh) {
 		if (m->sel) {
 			drw_setscheme(drw, scheme[m == selmon ? SchemeTitle : SchemeNorm]);			
-			drw_text(drw, x, 0, w - 2 * sp, bh, lrpad / 2, m->sel->name, 0);
+                       if (TEXTW(m->sel->name) > w) /* title is bigger than the width of the title rectangle, don't center */
+                               drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
+                       else /* center window title */
+                               drw_text(drw, x, 0, w, bh, (w - TEXTW(m->sel->name)) / 2, m->sel->name, 0);	
 			if (m->sel->isfloating)
 				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 		} else {
@@ -1508,6 +1549,98 @@ scan(void)
 	}
 }
 
+static void scratchpad_hide ()
+{
+	if (selmon -> sel)
+	{
+		selmon -> sel -> tags = SCRATCHPAD_MASK;
+		selmon -> sel -> isfloating = 1;
+		focus(NULL);
+		arrange(selmon);
+	}
+}
+
+static _Bool scratchpad_last_showed_is_killed (void)
+{
+	_Bool killed = 1;
+	for (Client * c = selmon -> clients; c != NULL; c = c -> next)
+	{
+		if (c == scratchpad_last_showed)
+		{
+			killed = 0;
+			break;
+		}
+	}
+	return killed;
+}
+
+static void scratchpad_remove ()
+{
+	if (selmon -> sel && scratchpad_last_showed != NULL && selmon -> sel == scratchpad_last_showed)
+		scratchpad_last_showed = NULL;
+}
+
+static void scratchpad_show ()
+{
+	if (scratchpad_last_showed == NULL || scratchpad_last_showed_is_killed ())
+		scratchpad_show_first ();
+	else
+	{
+		if (scratchpad_last_showed -> tags != SCRATCHPAD_MASK)
+		{
+			scratchpad_last_showed -> tags = SCRATCHPAD_MASK;
+			focus(NULL);
+			arrange(selmon);
+		}
+		else
+		{
+			_Bool found_current = 0;
+			_Bool found_next = 0;
+			for (Client * c = selmon -> clients; c != NULL; c = c -> next)
+			{
+				if (found_current == 0)
+				{
+					if (c == scratchpad_last_showed)
+					{
+						found_current = 1;
+						continue;
+					}
+				}
+				else
+				{
+					if (c -> tags == SCRATCHPAD_MASK)
+					{
+						found_next = 1;
+						scratchpad_show_client (c);
+						break;
+					}
+				}
+			}
+			if (found_next == 0) scratchpad_show_first ();
+		}
+	}
+}
+
+static void scratchpad_show_client (Client * c)
+{
+	scratchpad_last_showed = c;
+	c -> tags = selmon->tagset[selmon->seltags];
+	focus(c);
+	arrange(selmon);
+}
+
+static void scratchpad_show_first (void)
+{
+	for (Client * c = selmon -> clients; c != NULL; c = c -> next)
+	{
+		if (c -> tags == SCRATCHPAD_MASK)
+		{
+			scratchpad_show_client (c);
+			break;
+		}
+	}
+}
+
 void
 sendmon(Client *c, Monitor *m)
 {
@@ -1738,6 +1871,12 @@ showhide(Client *c)
 	if (ISVISIBLE(c)) {
 		/* show clients top down */
 		XMoveWindow(dpy, c->win, c->x, c->y);
+		if (c->needresize) {
+			c->needresize = 0;
+			XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);
+		} else {
+			XMoveWindow(dpy, c->win, c->x, c->y);
+		}
 		if ((!c->mon->lt[c->mon->sellt]->arrange || c->isfloating) && !c->isfullscreen)
 			resize(c, c->x, c->y, c->w, c->h, 0);
 		showhide(c->snext);
@@ -1906,6 +2045,8 @@ unmanage(Client *c, int destroyed)
 		XSetErrorHandler(xerror);
 		XUngrabServer(dpy);
 	}
+	if (scratchpad_last_showed == c)
+		scratchpad_last_showed = NULL;
 	free(c);
 	focus(NULL);
 	updateclientlist();
