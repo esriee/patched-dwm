@@ -2,14 +2,16 @@
 
 /* appearance */
 static const unsigned int borderpx  = 0;        /* border pixel of windows */
-static const unsigned int gappx     = 8;        /* gaps between windows */
+static const unsigned int gappx     = 10;        /* gaps between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
+static const int scalepreview       = 4;        /* preview scaling (display w and h / scalepreview) */
+static const int previewbar         = 1;        /* show the bar in the preview window */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 static const int user_bh            = 22;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const int vertpad            = 0;       /* vertical padding of bar */
 static const int sidepad            = 0;       /* horizontal padding of bar */
-static const char *fonts[]          = { "CaskaydiaCoveNerdFont:Bold:size=8" };
+static const char *fonts[]          = { "SF Pro Text:size=9","CaskaydiaCoveNerdFont:Bold:size=11" };
 static const char dmenufont[]       = "SF PRO Text:Bold:size=9";
 
 
@@ -33,8 +35,9 @@ static const Rule rules[] = {
 	 */
 	/* class      instance    title       tags mask     isfloating   monitor */
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
- 	{ "firefox",  NULL,       NULL,       1 << 1,       0,           -1 },
+ 	{ "Chromium",  NULL,       NULL,       1 << 1,       0,           -1 },
     { "vesktop",  NULL,       NULL,       1 << 5,        1,           -1 }, 
+	{ "Telegram", NULL,       NULL,        1 << 3,        1,          -1 },
 };
 
 /* layout(s) */
@@ -48,15 +51,20 @@ static const Layout layouts[] = {
 	{ "[]=",      tile },    /* first entry is default */
 	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
+	{ "|M|",      centeredmaster },
+	{ ">M>",      centeredfloatingmaster },
+    { NULL,       NULL },
+
 };
 
 /* key definitions */
+
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
 	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
+	{ MODKEY|ControlMask|ShiftMask, KEY,      previewtag,     {.ui = TAG } },     \
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
@@ -86,7 +94,11 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY,                       XK_u,      setlayout,      {.v = &layouts[3]} },
+	{ MODKEY,                       XK_o,      setlayout,      {.v = &layouts[4]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
+	{ MODKEY|ControlMask,           XK_comma,  cyclelayout,    {.i = -1 } },
+    { MODKEY|ControlMask,           XK_period, cyclelayout,    {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY|ShiftMask,             XK_f,      togglefullscr,  {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
@@ -95,6 +107,15 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
+	{ MODKEY,                       XK_KP_End,    movetoedge,       {.v = "-1 1" } },
+    { MODKEY,                       XK_KP_Down,   movetoedge,       {.v = "0 1" } },
+    { MODKEY,                       XK_KP_Next,   movetoedge,       {.v = "1 1" } },
+    { MODKEY,                       XK_KP_Left,   movetoedge,       {.v = "-1 0" } },
+    { MODKEY,                       XK_KP_Begin,  movetoedge,       {.v = "0 0" } },
+    { MODKEY,                       XK_KP_Right,  movetoedge,       {.v = "1 0" } },
+    { MODKEY,                       XK_KP_Home,   movetoedge,       {.v = "-1 -1" } },
+    { MODKEY,                       XK_KP_Up,     movetoedge,       {.v = "0 -1" } },
+    { MODKEY,                       XK_KP_Prior,  movetoedge,       {.v = "1 -1" } },
 	{ MODKEY,                       XK_minus,  setgaps,        {.i = -1 } },
 	{ MODKEY,                       XK_equal,  setgaps,        {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_equal,  setgaps,        {.i = 0  } },
