@@ -15,7 +15,7 @@ static const char *fonts[]          = { "SF Pro Text:size=10" , "ShuretechMono N
 static const char dmenufont[]       = "ShuretechMono Nerd Font:Bold:size=9";
 
 
-#include "/home/esrie/source/theme/everblush.h"
+#include "./theme/everblush.h"
 
 /* tagging */
 static const char *tags[] = { "一", "二", "三", "四", "五", "六", "七", "八", "九" };
