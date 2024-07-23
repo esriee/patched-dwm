@@ -1,32 +1,24 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const unsigned int borderpx  = 0;        /* border pixel of windows */
+static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int gappx     = 10;        /* gaps between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int scalepreview       = 4;        /* preview scaling (display w and h / scalepreview) */
 static const int previewbar         = 1;        /* show the bar in the preview window */
 static const int showbar            = 1;        /* 0 means no bar */
-static const int topbar             = 1;        /* 0 means bottom bar */
-static const int user_bh            = 22;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static const int topbar             = 0;        /* 0 means bottom bar */
+static const int user_bh            = 20;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const int vertpad            = 0;       /* vertical padding of bar */
-static const int sidepad            = 0;       /* horizontal padding of bar */
-static const char *fonts[]          = { "SF Pro Text:size=9","CaskaydiaCoveNerdFont:Bold:size=11" };
-static const char dmenufont[]       = "SF PRO Text:Bold:size=9";
+static const int sidepad            = 2;       /* horizontal padding of bar */
+static const char *fonts[]          = { "SF Pro Text:size=10" , "ShuretechMono Nerd Font:size=10" };
+static const char dmenufont[]       = "ShuretechMono Nerd Font:Bold:size=9";
 
 
-#include "/home/esrie/source/theme/gruvbox.h"
-
-static const char *colors[][3]      = {
-    /*                     fg       bg      border */
-    [SchemeNorm]       = { blue,   black,  blue },
-    [SchemeSel]        = { gray4,   blue,   blue  },
-    [SchemeTitle]      = { white,   black,  black  }, // active window title
-
-};
+#include "/home/esrie/source/theme/everblush.h"
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *tags[] = { "一", "二", "三", "四", "五", "六", "七", "八", "九" };
 
 static const Rule rules[] = {
 	/* xprop(1):
@@ -36,8 +28,9 @@ static const Rule rules[] = {
 	/* class      instance    title       tags mask     isfloating   monitor */
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
  	{ "Chromium",  NULL,       NULL,       1 << 1,       0,           -1 },
-    { "vesktop",  NULL,       NULL,       1 << 5,        1,           -1 }, 
-	{ "Telegram", NULL,       NULL,        1 << 3,        1,          -1 },
+    { "vesktop",  NULL,       NULL,       1 << 5,        1,           -1 },
+	{ "kitty",    NULL,       NULL,       0,            1,           -1 },
+
 };
 
 /* layout(s) */
@@ -71,10 +64,9 @@ static const Layout layouts[] = {
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "rofi", "-show", "drun", NULL };
+static const char *dmenucmd[] = { "dmenu_run", NULL };
 
-
-static const char *termcmd[]  = { "st", NULL };
+static const char *termcmd[]  = { "alacritty", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
