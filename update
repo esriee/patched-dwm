@@ -1,0 +1,5 @@
+#!/bin/bash 
+
+cp config.h config.def.h 
+sudo make clean install 
+xdotool key super+Shift+q
