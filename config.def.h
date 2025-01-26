@@ -14,8 +14,8 @@ static const int vertpad            = 0;       /* vertical padding of bar */
 static const int sidepad            = 0;       /* horizontal padding of bar */
 static const int horizpadbar        = 0;        /* horizontal padding for statusbar */
 static const int vertpadbar         = 9;        /* vertical padding for statusbar */
-static const char *fonts[]          = { "Hack Nerd Font:style=Bold:size=8" , "NotoColorEmoji:pixelsize=10:antialias=true:autohint=true" };
-static const char dmenufont[]       = "Hack Nerd Font:style=Bold:size=8";
+static const char *fonts[]          = { "IBM Plex Mono:style=Bold:size=8" , "NotoColorEmoji:pixelsize=10:antialias=true:autohint=true" };
+static const char dmenufont[]       = "IBM Plex Mono:style=Bold:size=8";
 static const char col_gray1[]       = "#222222";
 static const char col_gray2[]       = "#444444";
 static const char col_gray3[]       = "#bbbbbb";
@@ -78,7 +78,7 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "rofi", "-show", "run", NULL };
-static const char *termcmd[]  = { "alacritty", NULL };
+static const char *termcmd[]  = { "st", NULL };
 static const char *screenshotcmd[]  = { "screenshot", NULL };
 
 static Key keys[] = {
